@@ -81,10 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Compare natural gas, propane, and fuel oil heating costs vs. a heat pump and see your savings over time." },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Heat Pump Savings Calculator" },
-      { property: "og:description", content: "Compare natural gas, propane, and fuel oil heating costs vs. a heat pump." },
+      { property: "og:description", content: "Compare natural gas, propane, and fuel oil heating costs vs. a heat pump and see your savings over time." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Heat Pump Savings Calculator" },
+      { name: "twitter:description", content: "Compare natural gas, propane, and fuel oil heating costs vs. a heat pump and see your savings over time." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b8391a90-fb67-4da7-9b1d-f18a18498c1d/id-preview-ccd8e34b--b2cf7426-63fe-4d54-aa92-5f89915935a1.lovable.app-1783243163695.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b8391a90-fb67-4da7-9b1d-f18a18498c1d/id-preview-ccd8e34b--b2cf7426-63fe-4d54-aa92-5f89915935a1.lovable.app-1783243163695.png" },
     ],
     links: [
       {
