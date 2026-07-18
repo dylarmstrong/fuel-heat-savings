@@ -174,27 +174,6 @@ function Index() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* removed duplicate AFUE block below */}
-              <div className="hidden">
-
-
-              <div className="space-y-2">
-                <Label>Combustion efficiency (AFUE)</Label>
-                <Select value={efficiency} onValueChange={setEfficiency}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["0.80", "0.82", "0.85", "0.88", "0.90", "0.92", "0.95", "0.96", "0.98"].map(
-                      (v) => (
-                        <SelectItem key={v} value={v}>
-                          {(parseFloat(v) * 100).toFixed(0)}%
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
           </Card>
 
