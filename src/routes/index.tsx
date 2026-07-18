@@ -211,16 +211,29 @@ function Index() {
               </div>
 
               <div className="space-y-2">
-                <Label>Heating load (BTU/hr)</Label>
-                <Input
-                  type="number"
-                  step="1000"
-                  value={hpHeatBtu}
-                  onChange={(e) => setHpHeatBtu(parseFloat(e.target.value) || 0)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Typical residential: 18,000 – 60,000 BTU/hr
-                </p>
+                <Label>Heating size</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={+(hpHeatBtu / 12000).toFixed(2)}
+                      onChange={(e) =>
+                        setHpHeatBtu((parseFloat(e.target.value) || 0) * 12000)
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">tons</p>
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      step="1000"
+                      value={hpHeatBtu}
+                      onChange={(e) => setHpHeatBtu(parseFloat(e.target.value) || 0)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">BTU/hr (1 ton = 12,000)</p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
