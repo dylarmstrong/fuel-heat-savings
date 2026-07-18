@@ -211,12 +211,60 @@ function Index() {
               </div>
 
               <div className="space-y-2">
-                <Label>Runtime (hours per day)</Label>
+                <Label>Heating load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={hpHeatBtu}
+                  onChange={(e) => setHpHeatBtu(parseFloat(e.target.value) || 0)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Typical residential: 18,000 – 60,000 BTU/hr
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Heating runtime (hours per day)</Label>
                 <Input
                   type="number"
                   step="1"
                   value={hoursPerDay}
                   onChange={(e) => setHoursPerDay(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Cooling load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={hpCoolBtu}
+                  onChange={(e) => setHpCoolBtu(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cooling efficiency (EER, BTU/Wh)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={eer}
+                  onChange={(e) => setEer(parseFloat(e.target.value) || 0)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Typical: 9 – 14 EER
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cooling runtime (hours per day)</Label>
+                <Input
+                  type="number"
+                  step="1"
+                  value={coolHoursPerDay}
+                  onChange={(e) => setCoolHoursPerDay(parseFloat(e.target.value) || 0)}
                 />
               </div>
             </CardContent>
