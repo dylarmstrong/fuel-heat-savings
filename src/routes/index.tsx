@@ -48,25 +48,34 @@ function Index() {
   const [fuelPrice, setFuelPrice] = useState<number>(FUELS.natural_gas.defaultPrice);
   const [efficiency, setEfficiency] = useState<string>("0.90"); // 80% - 98%
   const [cop, setCop] = useState<number>(3);
+  const [eer, setEer] = useState<number>(12); // cooling efficiency BTU/Wh
   const [elecPrice, setElecPrice] = useState<number>(0.16); // $/kWh
   const [hoursPerDay, setHoursPerDay] = useState<number>(8);
-  const [fuelBtuPerHour, setFuelBtuPerHour] = useState<number>(60_000); // input rating
+  const [coolHoursPerDay, setCoolHoursPerDay] = useState<number>(6);
+  const [hpHeatBtu, setHpHeatBtu] = useState<number>(36_000); // heat pump heating load
+  const [hpCoolBtu, setHpCoolBtu] = useState<number>(36_000); // heat pump cooling load
 
   const results = useMemo(() => {
     const eff = parseFloat(efficiency);
     const f = FUELS[fuel];
 
-    // Useful heat delivered per hour (BTU)
-    const usefulBtuPerHour = fuelBtuPerHour * eff;
+    // Heating load to deliver (BTU/hr) — driven by heat pump heating capacity
+    const loadBtuPerHour = hpHeatBtu;
 
-    // Fuel cost per hour
-    const fuelUnitsPerHour = fuelBtuPerHour / f.btuPerUnit;
+    // Fuel needed to deliver the same load, accounting for AFUE
+    const fuelInputBtuNeeded = eff > 0 ? loadBtuPerHour / eff : 0;
+    const fuelUnitsPerHour = fuelInputBtuNeeded / f.btuPerUnit;
     const fuelCostPerHour = fuelUnitsPerHour * fuelPrice;
 
-    // Heat pump: deliver same useful BTU/hr
-    // kWh needed = usefulBTU / (COP * BTU_PER_KWH)
-    const hpKwhPerHour = cop > 0 ? usefulBtuPerHour / (cop * BTU_PER_KWH) : 0;
+    // Heat pump heating: kWh/hr = load / (COP * 3412)
+    const hpKwhPerHour = cop > 0 ? loadBtuPerHour / (cop * BTU_PER_KWH) : 0;
     const hpCostPerHour = hpKwhPerHour * elecPrice;
+
+    // Heat pump cooling: kWh/hr = coolBtu / (EER * 1000)
+    const coolKwhPerHour = eer > 0 ? hpCoolBtu / (eer * 1000) : 0;
+    const coolCostPerHour = coolKwhPerHour * elecPrice;
+    const coolCostPerDay = coolCostPerHour * coolHoursPerDay;
+    const coolCostPerYear = coolCostPerDay * 180; // ~cooling season days
 
     const savingsPerHour = fuelCostPerHour - hpCostPerHour;
     const savingsPerDay = savingsPerHour * hoursPerDay;
@@ -76,11 +85,15 @@ function Index() {
     const savings10yr = savingsPerYear * 10;
 
     return {
-      usefulBtuPerHour,
+      loadBtuPerHour,
+      fuelInputBtuNeeded,
       fuelUnitsPerHour,
       fuelCostPerHour,
       hpKwhPerHour,
       hpCostPerHour,
+      coolKwhPerHour,
+      coolCostPerHour,
+      coolCostPerYear,
       savingsPerHour,
       savingsPerDay,
       savingsPerMonth,
@@ -89,7 +102,7 @@ function Index() {
       savings10yr,
       unit: f.unit,
     };
-  }, [fuel, fuelPrice, efficiency, cop, elecPrice, hoursPerDay, fuelBtuPerHour]);
+  }, [fuel, fuelPrice, efficiency, cop, eer, elecPrice, hoursPerDay, coolHoursPerDay, hpHeatBtu, hpCoolBtu]);
 
   const currentFuel = FUELS[fuel];
   const money = (n: number) =>
@@ -142,19 +155,6 @@ function Index() {
                   value={fuelPrice}
                   onChange={(e) => setFuelPrice(parseFloat(e.target.value) || 0)}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Appliance input rating (BTU/hr)</Label>
-                <Input
-                  type="number"
-                  step="1000"
-                  value={fuelBtuPerHour}
-                  onChange={(e) => setFuelBtuPerHour(parseFloat(e.target.value) || 0)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Typical furnace/boiler: 40,000 – 120,000 BTU/hr
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -211,12 +211,60 @@ function Index() {
               </div>
 
               <div className="space-y-2">
-                <Label>Runtime (hours per day)</Label>
+                <Label>Heating load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={hpHeatBtu}
+                  onChange={(e) => setHpHeatBtu(parseFloat(e.target.value) || 0)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Typical residential: 18,000 – 60,000 BTU/hr
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Heating runtime (hours per day)</Label>
                 <Input
                   type="number"
                   step="1"
                   value={hoursPerDay}
                   onChange={(e) => setHoursPerDay(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Cooling load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={hpCoolBtu}
+                  onChange={(e) => setHpCoolBtu(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cooling efficiency (EER, BTU/Wh)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={eer}
+                  onChange={(e) => setEer(parseFloat(e.target.value) || 0)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Typical: 9 – 14 EER
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cooling runtime (hours per day)</Label>
+                <Input
+                  type="number"
+                  step="1"
+                  value={coolHoursPerDay}
+                  onChange={(e) => setCoolHoursPerDay(parseFloat(e.target.value) || 0)}
                 />
               </div>
             </CardContent>
@@ -227,7 +275,7 @@ function Index() {
           <CardHeader>
             <CardTitle>Results</CardTitle>
             <CardDescription>
-              Delivering {results.usefulBtuPerHour.toLocaleString(undefined, { maximumFractionDigits: 0 })} BTU/hr of useful heat.
+              Heating load: {results.loadBtuPerHour.toLocaleString()} BTU/hr. Cooling: {results.coolKwhPerHour.toFixed(2)} kWh/hr ({money(results.coolCostPerHour)}/hr, ~{money(results.coolCostPerYear)}/yr).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
