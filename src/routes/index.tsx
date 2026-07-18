@@ -275,7 +275,7 @@ function Index() {
           <CardHeader>
             <CardTitle>Results</CardTitle>
             <CardDescription>
-              Delivering {results.usefulBtuPerHour.toLocaleString(undefined, { maximumFractionDigits: 0 })} BTU/hr of useful heat.
+              Heating load: {results.loadBtuPerHour.toLocaleString()} BTU/hr. Cooling: {results.coolKwhPerHour.toFixed(2)} kWh/hr ({money(results.coolCostPerHour)}/hr, ~{money(results.coolCostPerYear)}/yr).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
