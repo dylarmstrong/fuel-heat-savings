@@ -48,25 +48,34 @@ function Index() {
   const [fuelPrice, setFuelPrice] = useState<number>(FUELS.natural_gas.defaultPrice);
   const [efficiency, setEfficiency] = useState<string>("0.90"); // 80% - 98%
   const [cop, setCop] = useState<number>(3);
+  const [eer, setEer] = useState<number>(12); // cooling efficiency BTU/Wh
   const [elecPrice, setElecPrice] = useState<number>(0.16); // $/kWh
   const [hoursPerDay, setHoursPerDay] = useState<number>(8);
-  const [fuelBtuPerHour, setFuelBtuPerHour] = useState<number>(60_000); // input rating
+  const [coolHoursPerDay, setCoolHoursPerDay] = useState<number>(6);
+  const [hpHeatBtu, setHpHeatBtu] = useState<number>(36_000); // heat pump heating load
+  const [hpCoolBtu, setHpCoolBtu] = useState<number>(36_000); // heat pump cooling load
 
   const results = useMemo(() => {
     const eff = parseFloat(efficiency);
     const f = FUELS[fuel];
 
-    // Useful heat delivered per hour (BTU)
-    const usefulBtuPerHour = fuelBtuPerHour * eff;
+    // Heating load to deliver (BTU/hr) — driven by heat pump heating capacity
+    const loadBtuPerHour = hpHeatBtu;
 
-    // Fuel cost per hour
-    const fuelUnitsPerHour = fuelBtuPerHour / f.btuPerUnit;
+    // Fuel needed to deliver the same load, accounting for AFUE
+    const fuelInputBtuNeeded = eff > 0 ? loadBtuPerHour / eff : 0;
+    const fuelUnitsPerHour = fuelInputBtuNeeded / f.btuPerUnit;
     const fuelCostPerHour = fuelUnitsPerHour * fuelPrice;
 
-    // Heat pump: deliver same useful BTU/hr
-    // kWh needed = usefulBTU / (COP * BTU_PER_KWH)
-    const hpKwhPerHour = cop > 0 ? usefulBtuPerHour / (cop * BTU_PER_KWH) : 0;
+    // Heat pump heating: kWh/hr = load / (COP * 3412)
+    const hpKwhPerHour = cop > 0 ? loadBtuPerHour / (cop * BTU_PER_KWH) : 0;
     const hpCostPerHour = hpKwhPerHour * elecPrice;
+
+    // Heat pump cooling: kWh/hr = coolBtu / (EER * 1000)
+    const coolKwhPerHour = eer > 0 ? hpCoolBtu / (eer * 1000) : 0;
+    const coolCostPerHour = coolKwhPerHour * elecPrice;
+    const coolCostPerDay = coolCostPerHour * coolHoursPerDay;
+    const coolCostPerYear = coolCostPerDay * 180; // ~cooling season days
 
     const savingsPerHour = fuelCostPerHour - hpCostPerHour;
     const savingsPerDay = savingsPerHour * hoursPerDay;
@@ -76,11 +85,15 @@ function Index() {
     const savings10yr = savingsPerYear * 10;
 
     return {
-      usefulBtuPerHour,
+      loadBtuPerHour,
+      fuelInputBtuNeeded,
       fuelUnitsPerHour,
       fuelCostPerHour,
       hpKwhPerHour,
       hpCostPerHour,
+      coolKwhPerHour,
+      coolCostPerHour,
+      coolCostPerYear,
       savingsPerHour,
       savingsPerDay,
       savingsPerMonth,
@@ -89,7 +102,7 @@ function Index() {
       savings10yr,
       unit: f.unit,
     };
-  }, [fuel, fuelPrice, efficiency, cop, elecPrice, hoursPerDay, fuelBtuPerHour]);
+  }, [fuel, fuelPrice, efficiency, cop, eer, elecPrice, hoursPerDay, coolHoursPerDay, hpHeatBtu, hpCoolBtu]);
 
   const currentFuel = FUELS[fuel];
   const money = (n: number) =>
