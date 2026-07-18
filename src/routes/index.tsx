@@ -249,13 +249,29 @@ function Index() {
               <Separator />
 
               <div className="space-y-2">
-                <Label>Cooling load (BTU/hr)</Label>
-                <Input
-                  type="number"
-                  step="1000"
-                  value={hpCoolBtu}
-                  onChange={(e) => setHpCoolBtu(parseFloat(e.target.value) || 0)}
-                />
+                <Label>Cooling size</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={+(hpCoolBtu / 12000).toFixed(2)}
+                      onChange={(e) =>
+                        setHpCoolBtu((parseFloat(e.target.value) || 0) * 12000)
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">tons</p>
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      step="1000"
+                      value={hpCoolBtu}
+                      onChange={(e) => setHpCoolBtu(parseFloat(e.target.value) || 0)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">BTU/hr</p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
