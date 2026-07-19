@@ -13,32 +13,13 @@ export const Route = createFileRoute("/")({
 
 type FuelKey = "natural_gas" | "propane" | "fuel_oil";
 
-// Energy content per unit of fuel (BTU)
 const FUELS: Record<
   FuelKey,
   { label: string; unit: string; btuPerUnit: number; defaultPrice: number; priceLabel: string }
 > = {
-  natural_gas: {
-    label: "Natural Gas",
-    unit: "therm",
-    btuPerUnit: 100_000,
-    defaultPrice: 1.5,
-    priceLabel: "$ / therm",
-  },
-  propane: {
-    label: "Propane",
-    unit: "gallon",
-    btuPerUnit: 91_500,
-    defaultPrice: 3.0,
-    priceLabel: "$ / gallon",
-  },
-  fuel_oil: {
-    label: "Fuel Oil (#2)",
-    unit: "gallon",
-    btuPerUnit: 138_500,
-    defaultPrice: 4.0,
-    priceLabel: "$ / gallon",
-  },
+  natural_gas: { label: "Natural Gas", unit: "therm", btuPerUnit: 100_000, defaultPrice: 1.5, priceLabel: "$ / therm" },
+  propane: { label: "Propane", unit: "gallon", btuPerUnit: 91_500, defaultPrice: 3.0, priceLabel: "$ / gallon" },
+  fuel_oil: { label: "Fuel Oil (#2)", unit: "gallon", btuPerUnit: 138_500, defaultPrice: 4.0, priceLabel: "$ / gallon" },
 };
 
 const BTU_PER_KWH = 3412;
@@ -46,63 +27,44 @@ const BTU_PER_KWH = 3412;
 function Index() {
   const [fuel, setFuel] = useState<FuelKey>("natural_gas");
   const [fuelPrice, setFuelPrice] = useState<number>(FUELS.natural_gas.defaultPrice);
-  const [efficiency, setEfficiency] = useState<string>("0.90"); // 80% - 98%
+  const [efficiency, setEfficiency] = useState<string>("0.90");
   const [cop, setCop] = useState<number>(3);
-  const [eer, setEer] = useState<number>(12); // cooling efficiency BTU/Wh
-  const [elecPrice, setElecPrice] = useState<number>(0.16); // $/kWh
+  const [elecPrice, setElecPrice] = useState<number>(0.16);
   const [hoursPerDay, setHoursPerDay] = useState<number>(8);
-  const [coolHoursPerDay, setCoolHoursPerDay] = useState<number>(6);
-  const [hpHeatBtu, setHpHeatBtu] = useState<number>(36_000); // heat pump heating load
-  const [hpCoolBtu, setHpCoolBtu] = useState<number>(36_000); // heat pump cooling load
+  const [loadBtu, setLoadBtu] = useState<string>("36000");
 
   const results = useMemo(() => {
     const eff = parseFloat(efficiency);
     const f = FUELS[fuel];
+    const loadBtuPerHour = parseFloat(loadBtu) || 0;
 
-    // Heating load to deliver (BTU/hr) — driven by heat pump heating capacity
-    const loadBtuPerHour = hpHeatBtu;
-
-    // Fuel needed to deliver the same load, accounting for AFUE
     const fuelInputBtuNeeded = eff > 0 ? loadBtuPerHour / eff : 0;
     const fuelUnitsPerHour = fuelInputBtuNeeded / f.btuPerUnit;
     const fuelCostPerHour = fuelUnitsPerHour * fuelPrice;
 
-    // Heat pump heating: kWh/hr = load / (COP * 3412)
     const hpKwhPerHour = cop > 0 ? loadBtuPerHour / (cop * BTU_PER_KWH) : 0;
     const hpCostPerHour = hpKwhPerHour * elecPrice;
-
-    // Heat pump cooling: kWh/hr = coolBtu / (EER * 1000)
-    const coolKwhPerHour = eer > 0 ? hpCoolBtu / (eer * 1000) : 0;
-    const coolCostPerHour = coolKwhPerHour * elecPrice;
-    const coolCostPerDay = coolCostPerHour * coolHoursPerDay;
-    const coolCostPerYear = coolCostPerDay * 180; // ~cooling season days
 
     const savingsPerHour = fuelCostPerHour - hpCostPerHour;
     const savingsPerDay = savingsPerHour * hoursPerDay;
     const savingsPerMonth = savingsPerDay * 30;
     const savingsPerYear = savingsPerDay * 365;
-    const savings5yr = savingsPerYear * 5;
-    const savings10yr = savingsPerYear * 10;
 
     return {
       loadBtuPerHour,
-      fuelInputBtuNeeded,
       fuelUnitsPerHour,
       fuelCostPerHour,
       hpKwhPerHour,
       hpCostPerHour,
-      coolKwhPerHour,
-      coolCostPerHour,
-      coolCostPerYear,
       savingsPerHour,
       savingsPerDay,
       savingsPerMonth,
       savingsPerYear,
-      savings5yr,
-      savings10yr,
+      savings5yr: savingsPerYear * 5,
+      savings10yr: savingsPerYear * 10,
       unit: f.unit,
     };
-  }, [fuel, fuelPrice, efficiency, cop, eer, elecPrice, hoursPerDay, coolHoursPerDay, hpHeatBtu, hpCoolBtu]);
+  }, [fuel, fuelPrice, efficiency, cop, elecPrice, hoursPerDay, loadBtu]);
 
   const currentFuel = FUELS[fuel];
   const money = (n: number) =>
@@ -112,12 +74,8 @@ function Index() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Heat Pump Savings Calculator
-          </h1>
-          <p className="text-muted-foreground">
-            Compare fossil fuel heating vs. a heat pump — hourly, monthly, and over time.
-          </p>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Heat Pump Savings Calculator</h1>
+          <p className="text-muted-foreground">Compare fossil fuel heating vs. a heat pump.</p>
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -136,9 +94,7 @@ function Index() {
                     setFuelPrice(FUELS[v].defaultPrice);
                   }}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="natural_gas">Natural Gas</SelectItem>
                     <SelectItem value="propane">Propane</SelectItem>
@@ -153,6 +109,7 @@ function Index() {
                   type="number"
                   step="0.01"
                   value={fuelPrice}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setFuelPrice(parseFloat(e.target.value) || 0)}
                 />
               </div>
@@ -160,17 +117,11 @@ function Index() {
               <div className="space-y-2">
                 <Label>Combustion efficiency (AFUE)</Label>
                 <Select value={efficiency} onValueChange={setEfficiency}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["0.80", "0.82", "0.85", "0.88", "0.90", "0.92", "0.95", "0.96", "0.98"].map(
-                      (v) => (
-                        <SelectItem key={v} value={v}>
-                          {(parseFloat(v) * 100).toFixed(0)}%
-                        </SelectItem>
-                      ),
-                    )}
+                    {["0.80", "0.82", "0.85", "0.88", "0.90", "0.92", "0.95", "0.96", "0.98"].map((v) => (
+                      <SelectItem key={v} value={v}>{(parseFloat(v) * 100).toFixed(0)}%</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -188,16 +139,8 @@ function Index() {
                   <Label>Heat pump COP</Label>
                   <span className="text-sm font-medium">{cop.toFixed(1)}</span>
                 </div>
-                <Slider
-                  value={[cop]}
-                  min={0}
-                  max={10}
-                  step={0.1}
-                  onValueChange={(v) => setCop(v[0])}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Typical cold-climate heat pumps: 2.0 – 4.5
-                </p>
+                <Slider value={[cop]} min={0} max={10} step={0.1} onValueChange={(v) => setCop(v[0])} />
+                <p className="text-xs text-muted-foreground">Typical cold-climate heat pumps: 2.0 – 4.5</p>
               </div>
 
               <div className="space-y-2">
@@ -206,94 +149,31 @@ function Index() {
                   type="number"
                   step="0.01"
                   value={elecPrice}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setElecPrice(parseFloat(e.target.value) || 0)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Heating size</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={+(hpHeatBtu / 12000).toFixed(2)}
-                      onChange={(e) =>
-                        setHpHeatBtu((parseFloat(e.target.value) || 0) * 12000)
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">tons</p>
-                  </div>
-                  <div>
-                    <Input
-                      type="number"
-                      step="1000"
-                      value={hpHeatBtu}
-                      onChange={(e) => setHpHeatBtu(parseFloat(e.target.value) || 0)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">BTU/hr (1 ton = 12,000)</p>
-                  </div>
-                </div>
+                <Label>Heating load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={loadBtu}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setLoadBtu(e.target.value.replace(/^0+(?=\d)/, ""))}
+                />
+                <p className="text-xs text-muted-foreground">1 ton = 12,000 BTU/hr</p>
               </div>
 
               <div className="space-y-2">
-                <Label>Heating runtime (hours per day)</Label>
+                <Label>Runtime (hours per day)</Label>
                 <Input
                   type="number"
                   step="1"
                   value={hoursPerDay}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setHoursPerDay(parseFloat(e.target.value) || 0)}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label>Cooling size</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={+(hpCoolBtu / 12000).toFixed(2)}
-                      onChange={(e) =>
-                        setHpCoolBtu((parseFloat(e.target.value) || 0) * 12000)
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">tons</p>
-                  </div>
-                  <div>
-                    <Input
-                      type="number"
-                      step="1000"
-                      value={hpCoolBtu}
-                      onChange={(e) => setHpCoolBtu(parseFloat(e.target.value) || 0)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">BTU/hr</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Cooling efficiency (EER, BTU/Wh)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={eer}
-                  onChange={(e) => setEer(parseFloat(e.target.value) || 0)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Typical: 9 – 14 EER
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Cooling runtime (hours per day)</Label>
-                <Input
-                  type="number"
-                  step="1"
-                  value={coolHoursPerDay}
-                  onChange={(e) => setCoolHoursPerDay(parseFloat(e.target.value) || 0)}
                 />
               </div>
             </CardContent>
@@ -303,25 +183,19 @@ function Index() {
         <Card>
           <CardHeader>
             <CardTitle>Results</CardTitle>
-            <CardDescription>
-              Heating load: {results.loadBtuPerHour.toLocaleString()} BTU/hr. Cooling: {results.coolKwhPerHour.toFixed(2)} kWh/hr ({money(results.coolCostPerHour)}/hr, ~{money(results.coolCostPerYear)}/yr).
-            </CardDescription>
+            <CardDescription>Delivering {results.loadBtuPerHour.toLocaleString()} BTU/hr of useful heat.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-lg border p-4 space-y-1">
                 <div className="text-sm text-muted-foreground">{currentFuel.label} cost / hr</div>
                 <div className="text-2xl font-semibold">{money(results.fuelCostPerHour)}</div>
-                <div className="text-xs text-muted-foreground">
-                  {results.fuelUnitsPerHour.toFixed(3)} {results.unit}/hr
-                </div>
+                <div className="text-xs text-muted-foreground">{results.fuelUnitsPerHour.toFixed(3)} {results.unit}/hr</div>
               </div>
               <div className="rounded-lg border p-4 space-y-1">
                 <div className="text-sm text-muted-foreground">Heat pump cost / hr</div>
                 <div className="text-2xl font-semibold">{money(results.hpCostPerHour)}</div>
-                <div className="text-xs text-muted-foreground">
-                  {results.hpKwhPerHour.toFixed(2)} kWh/hr
-                </div>
+                <div className="text-xs text-muted-foreground">{results.hpKwhPerHour.toFixed(2)} kWh/hr</div>
               </div>
             </div>
 
@@ -343,11 +217,7 @@ function Index() {
                   return (
                     <div key={label as string} className="rounded-lg border p-3">
                       <div className="text-xs text-muted-foreground">{label as string}</div>
-                      <div
-                        className={`text-lg font-semibold ${
-                          positive ? "text-emerald-600" : "text-destructive"
-                        }`}
-                      >
+                      <div className={`text-lg font-semibold ${positive ? "text-emerald-600" : "text-destructive"}`}>
                         {money(n)}
                       </div>
                     </div>
