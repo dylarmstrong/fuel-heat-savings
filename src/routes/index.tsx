@@ -183,7 +183,7 @@ function Index() {
         <Card>
           <CardHeader>
             <CardTitle>Results</CardTitle>
-            <CardDescription>Delivering {results.loadBtuPerHour.toLocaleString()} BTU/hr of useful heat.</CardDescription>
+            <CardDescription>Delivering {results.loadBtuPerHour.toLocaleString()} BTU/hr of useful heat ({(results.loadBtuPerHour / 12000).toFixed(2)} tons).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
