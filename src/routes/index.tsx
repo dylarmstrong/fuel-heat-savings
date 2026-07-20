@@ -183,9 +183,19 @@ function Index() {
         <Card>
           <CardHeader>
             <CardTitle>Results</CardTitle>
-            <CardDescription>Delivering {results.loadBtuPerHour.toLocaleString()} BTU/hr of useful heat ({(results.loadBtuPerHour / 12000).toFixed(2)} tons).</CardDescription>
+            <CardDescription>Comparison for the heating load you entered.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-lg border bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="text-sm text-muted-foreground">Heating load</div>
+                <div className="text-2xl font-semibold">{results.loadBtuPerHour.toLocaleString()} BTU/hr</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Tonnage</div>
+                <div className="text-2xl font-semibold">{(results.loadBtuPerHour / 12000).toFixed(2)} tons</div>
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-lg border p-4 space-y-1">
                 <div className="text-sm text-muted-foreground">{currentFuel.label} cost / hr</div>
