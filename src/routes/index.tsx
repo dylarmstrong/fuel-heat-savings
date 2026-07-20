@@ -115,6 +115,18 @@ function Index() {
               </div>
 
               <div className="space-y-2">
+                <Label>Heating load (BTU/hr)</Label>
+                <Input
+                  type="number"
+                  step="1000"
+                  value={loadBtu}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setLoadBtu(e.target.value.replace(/^0+(?=\d)/, ""))}
+                />
+                <p className="text-xs text-muted-foreground">1 ton = 12,000 BTU/hr · Current: {(parseFloat(loadBtu || "0") / 12000).toFixed(2)} tons</p>
+              </div>
+
+              <div className="space-y-2">
                 <Label>Combustion efficiency (AFUE)</Label>
                 <Select value={efficiency} onValueChange={setEfficiency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -155,18 +167,6 @@ function Index() {
               </div>
 
               <div className="space-y-2">
-                <Label>Heating load (BTU/hr)</Label>
-                <Input
-                  type="number"
-                  step="1000"
-                  value={loadBtu}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onChange={(e) => setLoadBtu(e.target.value.replace(/^0+(?=\d)/, ""))}
-                />
-                <p className="text-xs text-muted-foreground">1 ton = 12,000 BTU/hr</p>
-              </div>
-
-              <div className="space-y-2">
                 <Label>Runtime (hours per day)</Label>
                 <Input
                   type="number"
@@ -183,9 +183,19 @@ function Index() {
         <Card>
           <CardHeader>
             <CardTitle>Results</CardTitle>
-            <CardDescription>Delivering {results.loadBtuPerHour.toLocaleString()} BTU/hr of useful heat ({(results.loadBtuPerHour / 12000).toFixed(2)} tons).</CardDescription>
+            <CardDescription>Comparison for the heating load you entered.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-lg border bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="text-sm text-muted-foreground">Heating load</div>
+                <div className="text-2xl font-semibold">{results.loadBtuPerHour.toLocaleString()} BTU/hr</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Tonnage</div>
+                <div className="text-2xl font-semibold">{(results.loadBtuPerHour / 12000).toFixed(2)} tons</div>
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-lg border p-4 space-y-1">
                 <div className="text-sm text-muted-foreground">{currentFuel.label} cost / hr</div>
