@@ -167,18 +167,6 @@ function Index() {
               </div>
 
               <div className="space-y-2">
-                <Label>Heating load (BTU/hr)</Label>
-                <Input
-                  type="number"
-                  step="1000"
-                  value={loadBtu}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onChange={(e) => setLoadBtu(e.target.value.replace(/^0+(?=\d)/, ""))}
-                />
-                <p className="text-xs text-muted-foreground">1 ton = 12,000 BTU/hr</p>
-              </div>
-
-              <div className="space-y-2">
                 <Label>Runtime (hours per day)</Label>
                 <Input
                   type="number"
